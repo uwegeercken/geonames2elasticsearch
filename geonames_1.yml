@@ -1,0 +1,190 @@
+input {
+	file
+	{
+		path => "${LOGSTASH_PIPELINE_INPUT_FILE}"
+	        start_position => "beginning"
+		sincedb_path => "/dev/null"
+		mode => "tail"
+	}
+}
+
+filter {
+	csv {
+		columns => ['geonameid','name','asciiname','alternatenames','latitude','longitude','feature_class','feature_code','country_code','cc2','admin1_code','admin2_code','admin3_code','admin4_code','population','elevation','dem','timezone','modification_date']
+		separator => "	"
+		add_field => { 
+			"feature" => "%{feature_class}.%{feature_code}"
+			"[Position][lat]" => "%{latitude}"
+			"[Position][lon]" => "%{longitude}"
+		}
+	}
+
+	translate {
+		dictionary_path => "${LOGSTASH_PIPELINE_LOOKUP_FOLDER}/continent_lookup.csv"
+		field => "country_code"
+		destination => "continent_code"
+		fallback => "[undefined]"
+		refresh_interval => 86400
+	}
+
+	translate {
+		dictionary_path => "${LOGSTASH_PIPELINE_LOOKUP_FOLDER}/continent_names_lookup.csv"
+		field => "continent_code"
+		destination => "continent_name"
+		fallback => "[undefined]"
+		refresh_interval => 86400
+	}
+
+	translate {
+		dictionary_path => "${LOGSTASH_PIPELINE_LOOKUP_FOLDER}/features_lookup.csv"
+		field => "feature"
+		destination => "feature_name"
+		fallback => "[undefined]"
+		refresh_interval => 86400
+	}
+
+	translate {
+		dictionary_path => "${LOGSTASH_PIPELINE_LOOKUP_FOLDER}/feature_classes_lookup.csv"
+		field => "feature_class"
+		destination => "feature_class_name"
+		fallback => "[undefined]"
+		refresh_interval => 86400
+	}
+
+	if [admin1_code]!= "00" {
+		mutate {
+			add_field => { 
+				"admin1_key" => "%{country_code}.%{admin1_code}"
+			}
+		}
+
+		translate {
+			dictionary_path => "${LOGSTASH_PIPELINE_LOOKUP_FOLDER}/admincodes1_lookup.csv"
+			field => "admin1_key"
+			destination => "first_order_administrative_devision"
+			fallback => "[undefined]"
+			refresh_interval => 86400
+		}
+	}
+	else
+	{
+		mutate {
+			add_field => { 
+				"first_order_administrative_devision" => "[undefined]"
+			}
+		}
+	}
+
+	if [admin2_code] {
+		mutate {
+			add_field => { 
+				"admin2_key" => "%{country_code}.%{admin1_code}.%{admin2_code}"
+			}
+		}
+
+		translate {
+			dictionary_path => "${LOGSTASH_PIPELINE_LOOKUP_FOLDER}/admincodes2_lookup.csv"
+			field => "admin2_key"
+			destination => "second_order_administrative_devision"
+			fallback => "[undefined]"
+			refresh_interval => 86400
+		}
+	}
+	else
+	{
+		mutate {
+			add_field => { 
+				"second_order_administrative_devision" => "[undefined]"
+			}
+		}
+	}
+
+	if [admin3_code] {
+		mutate {
+			add_field => { 
+				"admin3_key" => "%{country_code}.%{admin1_code}.%{admin2_code}.%{admin3_code}"
+			}
+		}
+
+		translate {
+			dictionary_path => "${LOGSTASH_PIPELINE_LOOKUP_FOLDER}/admincodes3_lookup.csv"
+			field => "admin3_key"
+			destination => "third_order_administrative_devision"
+			fallback => "[undefined]"
+			refresh_interval => 86400
+		}
+	}
+	else
+	{
+		mutate {
+			add_field => { 
+				"third_order_administrative_devision" => "[undefined]"
+			}
+		}
+	}
+
+	if [admin4_code] {
+		mutate {
+			add_field => { 
+				"admin4_key" => "%{country_code}.%{admin1_code}.%{admin2_code}.%{admin3_code}.%{admin4_code}"
+			}
+		}
+
+		translate {
+			dictionary_path => "${LOGSTASH_PIPELINE_LOOKUP_FOLDER}/admincodes4_lookup.csv"
+			field => "admin4_key"
+			destination => "fourth_order_administrative_devision"
+			fallback => "[undefined]"
+			refresh_interval => 86400
+		}
+	}
+	else
+	{
+		mutate {
+			add_field => { 
+				"fourth_order_administrative_devision" => "[undefined]"
+			}	
+		}
+	}
+	mutate
+	{
+		convert => {
+			"[Position][lat]" => "float"
+			"[Position][lon]" => "float"
+			"population" => "integer"
+			"elevation" => "integer"
+			"geonameid" => "integer"
+		}
+
+		rename => { 
+			"cc2" => "Country Code Alternate"
+			"country_code" => "Country Code" 
+			"name" => "Name" 
+			"asciiname" => "Name ASCII" 
+			"elevation" => "Elevation" 
+			"feature" => "Feature" 
+			"feature_class_name" => "Feature Class Name"
+			"feature_name" => "Feature Name"
+			"modification_date" => "Modification Date"
+			"population" => "Population"
+			"first_order_administrative_devision" => "Admin Devision 1st Order"
+			"second_order_administrative_devision" => "Admin Devision 2nd Order"
+			"third_order_administrative_devision" => "Admin Devision 3rd Order"
+			"fourth_order_administrative_devision" => "Admin Devision 4th Order"
+			"timezone" => "Timezone"
+			"continent_code" => "Continent Code"
+			"continent_name" => "Continent"
+		}
+
+		remove_field => [ "documents", "events", "message", "host", "path", "@version", "latitude", "longitude", "alternatenames", "admin1_code","admin2_code","admin3_code", "admin4_code", "dem", "admin1_key", "admin2_key", "admin3_key", "admin4_key", "feature_class", "feature_code", "tags" ]
+	}
+}
+
+output {
+	elasticsearch {
+		hosts => ["${LOGSTASH_PIPELINE_ELASTICSEARCH_HOST}"]
+		index => "geonames"
+		document_id => "%{geonameid}"
+	}
+}
+
