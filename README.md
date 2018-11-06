@@ -18,10 +18,10 @@ To run the process:
 
 The geo location data contains over 11 million points and has a size of around 2.8 Gb on disk. Depending on your system, the process will run a bit until all data has been imported.
 
-The geonameid - a unique id for each data point - is used as the id in Elasticsearch. This means that when you download a new file from Elasticsearch, you can re-run the process to get an up-to-date data set; existing data point are updated (based on the geonameid) and new ones are inserted.
+The geonameid - a unique id for each data point - is used as the id in Elasticsearch. This means that when you download a new file from geonames.org, you can re-run the process to get an up-to-date data set; existing data point are updated (based on the geonameid) and new ones are inserted.
 
 Hope you enjoy it and thanks for any feedback.
 
 Copyright Uwe Geercken, 2018
-last update 2018-10-16
+last update 2018-11-06
 
