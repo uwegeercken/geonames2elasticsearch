@@ -15,7 +15,7 @@ logstash_config="${root_folder}/geonames_1.yml"
 
 elasticsearch_host="http://localhost:9200"
 
-input_file="${1}"
+input_file="$(readlink -f ${1})"
 
 echo
 echo "$(date '+%Y-%m-%d %H:%M:%S') load geonames data to eleasticsearch"
@@ -36,7 +36,7 @@ export LOGSTASH_PIPELINE_LOOKUP_FOLDER="${lookup_folder}"
 export LOGSTASH_PIPELINE_INPUT_FILE="${input_file}"
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') running logstash file: ${logstash_config}"
-. $("${logstash_folder}"/bin/logstash -b 1000 -w 2 -f "${logstash_config}") 
+echo "$(date '+%Y-%m-%d %H:%M:%S') using input file file: ${input_file}"
+. $("${logstash_folder}"/bin/logstash -b 1000 -w 4 -f "${logstash_config}")
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') end of process"
-
