@@ -1,5 +1,5 @@
 # geonames2elasticsearch
-Using a shell script to steer the process to read and transform geolocation data from https://geonames.com using logstash and sending it to Elasticsearch
+Using a shell script to steer the process to read and transform geolocation data from https://geonames.org using logstash and sending it to Elasticsearch
 
 - the shell scripts sets all required variables
 - sed is used to remove all double quotes from the input file
