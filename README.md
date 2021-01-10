@@ -13,15 +13,15 @@ To run the process:
 - install Logstash, ELasticsearch and Kibana from the https://www.elastic.co website. That is very easy!
 - Run Elasticsearch and Kibana
 - download the allCountries.zip file from https://geonames.com and unzip it
-- adjust the variable "root_folder", "logstash_folder" and "elasticsearch_host" as appropriate for your system
-- run the Linux shell script I provided process_file.sh and pass the full path and filename of the unzip geonames file (allCountries.txt). e.g. ./process_file.sh /home/myuser/geonames/allCountries.txt
+- adjust the variable "root_folder", "logstash_folder" and "elasticsearch_host" as appropriate for your system in the process_file.sh script
+- run the Linux shell script process_file.sh and pass the path and filename of the unzipped geonames file (allCountries.txt). e.g. ./process_file.sh /home/myuser/geonames/allCountries.txt
 
 The geo location data contains over 11 million points and has a size of around 2.8 Gb on disk. Depending on your system, the process will run a bit until all data has been imported.
 
-The geonameid - a unique id for each data point - is used as the id in Elasticsearch. This means that when you download a new file from geonames.org, you can re-run the process to get an up-to-date data set; existing data point are updated (based on the geonameid) and new ones are inserted.
+The geonameid - a unique id for each data point - is used as the id in Elasticsearch. This means that when you download a new file from geonames.org, you can re-run the process to get an up-to-date data set; existing data point are updated (based on the geonameid) and new ones are inserted. But this does not include deleted points - I will implement this later maybe.
 
 Hope you enjoy it and thanks for any feedback.
 
-Copyright Uwe Geercken, 2018
-last update 2018-11-06
+Copyright Uwe Geercken, 2018-2020
+last update 2020-02-19
 
